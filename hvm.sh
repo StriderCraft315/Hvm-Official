@@ -69,4 +69,19 @@ cd Hvm-official
 
 Unzip Hvm.zip
 
+echo "
+=======================================================
+   _____              _            _   _       _      
+  / ____|            | |          | | (_)     | |     
+ | |     _ __ ___  __| | ___ _ __ | |_ _  __ _| |___  
+ | |    | '__/ _ \/ _` |/ _ \ '_ \| __| |/ _` | / __| 
+ | |____| | |  __/ (_| |  __/ | | | |_| | (_| | \__ \ 
+  \_____|_|  \___|\__,_|\___|_| |_|\__|_|\__,_|_|___/ 
+
+                  Username : admin
+                  Password : admin
+========================================================
+
+"
+
 echo "✅ Hvm Panel Installed Successfully Change The Encryption Keys by runnning python3 update_keys.py & generate a license using python3 lmaker.py"
