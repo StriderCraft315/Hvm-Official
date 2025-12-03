@@ -33,8 +33,9 @@ run_with_spinner() {
     
     if [ $? -ne 0 ]; then
         echo "❌ Error: Failed to execute: $cmd"
-        exit 1
+        return 1
     fi
+    return 0
 }
 
 print_line_by_line() {
@@ -54,7 +55,7 @@ lines1=(
 "         / /_   _  ___ _ __ ___  _ __   "
 "        / /| | | |/ __| '__/ _ \| '_ \  "
 "       / /_| |_| | (__| | | (_) | | | | "
-"      /_____\__, |\___|_|  \___/|_| |_| "
+"     /_____\__, |\___|_|  \___/|_| |_| "
 "            __/ |                      "
 "            |___/                      "
 "================================================="
@@ -71,7 +72,6 @@ lines2=(
 " | |\/| | |/ __| '_ \ / _\` |/ _ \ |"
 " | |  | | | (__| | | | (_| |  __/ |"
 " |_|  |_|_|\___|_| |_|\__,_|\___|_|"
-"                                   "
 "                                   "
 "================================================="
 )
@@ -124,10 +124,28 @@ echo "🐋 Installing Docker..."
 sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
 
 # Install Docker using official script
-run_with_spinner "curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh" "Installing Docker"
+if ! command -v docker &> /dev/null; then
+    echo "📥 Downloading Docker installer..."
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    echo "🔧 Installing Docker..."
+    sudo sh /tmp/get-docker.sh
+    rm /tmp/get-docker.sh
+    echo "✅ Docker installed"
+else
+    echo "✅ Docker is already installed"
+fi
 
 # Install Docker Compose
-run_with_spinner "sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose" "Installing Docker Compose"
+echo ""
+echo "📦 Installing Docker Compose..."
+if ! command -v docker-compose &> /dev/null; then
+    echo "📥 Downloading Docker Compose..."
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    echo "✅ Docker Compose installed"
+else
+    echo "✅ Docker Compose is already installed"
+fi
 
 echo ""
 echo "🐍 Installing Python Dependencies..."
@@ -135,7 +153,11 @@ run_with_spinner "pip3 install cryptography pycryptodome flask flask-socketio fl
 
 echo ""
 echo "📥 Cloning Hvm-Official Repository..."
-run_with_spinner "git clone https://github.com/StriderCraft315/Hvm-Official" "Cloning repository from GitHub"
+if [ ! -d "Hvm-Official" ]; then
+    run_with_spinner "git clone https://github.com/StriderCraft315/Hvm-Official" "Cloning repository from GitHub"
+else
+    echo "✅ Hvm-Official directory already exists"
+fi
 
 echo ""
 echo "📁 Changing to Hvm-Official directory..."
@@ -168,7 +190,7 @@ else
 fi
 
 echo ""
-echo "🔧 Setting up Docker..."
+echo "🔧 Setting up Docker service..."
 run_with_spinner "sudo systemctl start docker" "Starting Docker service"
 run_with_spinner "sudo systemctl enable docker" "Enabling Docker on boot"
 
@@ -177,6 +199,8 @@ if ! groups $USER | grep -q '\bdocker\b'; then
     echo "👤 Adding user to docker group..."
     sudo usermod -aG docker $USER
     echo "✅ User added to docker group. Please log out and back in for changes to take effect."
+else
+    echo "✅ User is already in docker group"
 fi
 
 clear
@@ -217,17 +241,10 @@ else
 fi
 
 echo ""
-echo "📋 Creating virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
-
-echo ""
 echo "📦 Installing project-specific dependencies..."
 if [ -f "requirements.txt" ]; then
-    run_with_spinner "pip install -r requirements.txt" "Installing from requirements.txt"
+    run_with_spinner "pip3 install -r requirements.txt" "Installing from requirements.txt"
 fi
-
-deactivate
 
 echo ""
 echo "🎉 Hvm Panel Installed Successfully!"
@@ -240,8 +257,9 @@ echo ""
 echo "💡 Tip: Make sure to change the default credentials for security!"
 echo ""
 echo "🛠️  Docker Setup Complete:"
-echo "   - Docker and Docker Compose are installed"
-echo "   - Docker service is running and enabled"
+docker --version
+docker-compose --version
+echo "   - Docker service is running"
 echo "   - Your user has been added to the docker group"
 echo "   - Log out and back in to use docker without sudo"
 echo ""
