@@ -150,7 +150,7 @@ fi
 
 echo ""
 echo "🐍 Installing Python Dependencies..."
-run_with_spinner "pip3 install cryptography pycryptodome flask flask-socketio flask-login docker paramiko psutil python-dotenv email-validator flask_limiter" "Installing Python packages"
+run_with_spinner "pip3 install cryptography pycryptodome ecdsa flask flask-socketio flask-login docker paramiko psutil python-dotenv email-validator flask_limiter" "Installing Python packages"
 
 echo ""
 echo "📥 Cloning Hvm-Official Repository..."
