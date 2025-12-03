@@ -48,7 +48,7 @@ print_line_by_line() {
 clear
 
 lines1=(
-"================================================"
+"================================================="
 "       ______                           "
 "      |___  /                           "
 "         / /_   _  ___ _ __ ___  _ __   "
@@ -57,7 +57,7 @@ lines1=(
 "      /_____\__, |\___|_|  \___/|_| |_| "
 "            __/ |                      "
 "            |___/                      "
-"================================================"
+"================================================="
 )
 print_line_by_line "${lines1[@]}"
 sleep 1
@@ -115,7 +115,18 @@ run_with_spinner "sudo apt upgrade -y" "Upgrading installed packages"
 
 echo ""
 echo "📦 Installing System Dependencies..."
-run_with_spinner "sudo apt install -y python3 python3-pip python3-venv git unzip docker.io docker-compose" "Installing system packages"
+run_with_spinner "sudo apt install -y python3 python3-pip python3-venv git unzip curl apt-transport-https ca-certificates software-properties-common" "Installing system packages"
+
+echo ""
+echo "🐋 Installing Docker..."
+# Remove old versions
+sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+
+# Install Docker using official script
+run_with_spinner "curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh" "Installing Docker"
+
+# Install Docker Compose
+run_with_spinner "sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose" "Installing Docker Compose"
 
 echo ""
 echo "🐍 Installing Python Dependencies..."
@@ -155,6 +166,18 @@ else
     ls -la
 fi
 
+echo ""
+echo "🔧 Setting up Docker..."
+run_with_spinner "sudo systemctl start docker" "Starting Docker service"
+run_with_spinner "sudo systemctl enable docker" "Enabling Docker on boot"
+
+# Add current user to docker group
+if ! groups $USER | grep -q '\bdocker\b'; then
+    echo "👤 Adding user to docker group..."
+    sudo usermod -aG docker $USER
+    echo "✅ User added to docker group. Please log out and back in for changes to take effect."
+fi
+
 clear
 
 lines5=(
@@ -171,11 +194,6 @@ lines5=(
 "========================================================"
 )
 print_line_by_line "${lines5[@]}"
-
-echo ""
-echo "🔧 Setting up Docker..."
-run_with_spinner "sudo systemctl start docker" "Starting Docker service"
-run_with_spinner "sudo systemctl enable docker" "Enabling Docker on boot"
 
 echo ""
 echo "🔍 Checking for required Python files..."
@@ -220,10 +238,11 @@ echo "   3. Start the panel with: python3 hvm.py"
 echo ""
 echo "💡 Tip: Make sure to change the default credentials for security!"
 echo ""
-echo "🛠️  Additional Setup:"
-echo "   - To use Docker features, add your user to docker group:"
-echo "     sudo usermod -aG docker \$USER"
-echo "   - Then log out and log back in"
+echo "🛠️  Docker Setup Complete:"
+echo "   - Docker and Docker Compose are installed"
+echo "   - Docker service is running and enabled"
+echo "   - Your user has been added to the docker group"
+echo "   - Log out and back in to use docker without sudo"
 echo ""
 
 echo "✅ Installation completed successfully!"
